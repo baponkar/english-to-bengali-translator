@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Collection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+        .data-container {
+            margin-top: 20px;
+        }
+        .data-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Data Collection</h2>
+    <form id="dataForm">
+        <label for="englishSentence">English Sentence:</label>
+        <input type="text" id="englishSentence" name="englishSentence" required>
+
+        <label for="bengaliSentence">Bengali Sentence:</label>
+        <input type="text" id="bengaliSentence" name="bengaliSentence" required pattern="\p{Bengali}*" title="Please enter Bengali text only">
+
+        <input type="submit" value="Submit">
+    </form>
+
+    <div class="data-container">
+        <h3>Posted Data</h3>
+        <div id="postedData"></div>
+    </div>
+
+    <script>
+        // Function to fetch and display posted data
+        function fetchPostedData() {
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    var responseData = JSON.parse(xhr.responseText);
+                    var postedDataHtml = '';
+                    responseData.forEach(function(item) {
+                        postedDataHtml += '<div class="data-item">';
+                        postedDataHtml += '<p><strong>English Sentence:</strong> ' + item.englishSentence + '</p>';
+                        postedDataHtml += '<p><strong>Bengali Sentence:</strong> ' + item.bengaliSentence + '</p>';
+                        postedDataHtml += '<p><strong>Date Posted:</strong> ' + item.postedDateTime + '</p>';
+                        postedDataHtml += '</div>';
+                    });
+                    document.getElementById("postedData").innerHTML = postedDataHtml;
+                }
+            };
+            xhr.open("GET", "fetch_data.php", true);
+            xhr.send();
+        }
+
+        // Fetch and display posted data when the page loads
+        window.onload = fetchPostedData;
+
+        // Function to handle form submission
+        document.getElementById("dataForm").addEventListener("submit", function(event) {
+            event.preventDefault(); // Prevent the default form submission
+
+            // Get the values from the input fields
+            var englishSentence = document.getElementById("englishSentence").value;
+            var bengaliSentence = document.getElementById("bengaliSentence").value;
+
+            // Send the data to the server using AJAX
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    // Data saved successfully, fetch and display updated data
+                    fetchPostedData();
+                    // Reset the input fields after successful submission
+                    document.getElementById("englishSentence").value = "";
+                    document.getElementById("bengaliSentence").value = "";
+                }
+            };
+            xhr.open("POST", "save_data.php", true);
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            var data = "englishSentence=" + encodeURIComponent(englishSentence) + "&bengaliSentence=" + encodeURIComponent(bengaliSentence);
+            xhr.send(data);
+        });
+    </script>
+</body>
+</html>
